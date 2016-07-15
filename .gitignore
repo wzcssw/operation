@@ -1,0 +1,7 @@
+.idea
+*.log
+logs/*
+node_modules
+bower_components
+
+config/development.js

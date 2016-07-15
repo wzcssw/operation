@@ -1,0 +1,187 @@
+<style>
+	a{
+			padding: 2px 10px;
+	}
+	a:hover{
+			cursor: pointer;
+	}
+</style>
+<div class="table-operation">
+	<h3>医院字典</h3>
+	<div style="height:30px;">
+		<div class='pagination'>
+		  <uib-pagination style="margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+		  <div style="float: right;position: relative;top: -20px;">
+		    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+		    <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+		  </div>
+		</div>
+
+
+    <button style="float: right;width: 5%;" ng-click="search()" class="btn btn-default">搜索</button>
+    <input style="width: 13%;float: right;margin-left: 5px;margin-right: 5px;" type="text" ng-model="q" class="form-control" id="hos_q" placeholder="名称 、拼音">
+    <select style="width: 6%;float: right;" ng-change="search()" ng-model="city_id" class="form-control">
+      <option value="">全部</option>
+      <option ng-repeat="city in cities" value={{city.id}}>{{city.name}}</option>
+    </select>
+		<button type="button"  style="float: right;margin-left: 5px;margin-right: 5px;" class="btn btn-default">导出</button>
+		<button type="button" style="float: right;margin-left: 5px;" class="btn btn-default" ng-click="open_new('lg')">新增医院</button>
+	</div>
+
+</div>
+<table class="table table-bordered table-hover">
+  	<tr style="background-color:#f6f6f6;">
+  	  <td>#</td>
+  	  <td>医院名称</td>
+  	  <td>医院等级</td>
+      <td>医院性质</td>
+			<td>省份 / 城市</td>
+  	  <td>拼音</td>
+  	  <td></td>
+  	</tr>
+  	<tr ng-repeat="hospital in self.hospitals">
+  		<td>{{hospital.id}}</td>
+  		<td>{{hospital.name}}</td>
+  		<td>{{hospital.level_name}}</td>
+      <td>{{hospital.nature_name}}</td>
+			<td>
+				{{hospital.province_name?hospital.province_name:'..'}} / {{hospital.city_name?hospital.city_name:'..'}}
+			</td>
+  		<td>{{hospital.pinyin}}</td>
+  		<td>
+				<a class="btn btn-default btn-xs color_box" ng-click="open_device(hospital)">设备信息</a>
+				<a class="btn btn-default btn-success btn-xs" ng-click="open_edit(hospital)">编辑</a>
+  			<a class="btn btn-default btn-danger btn-xs" ng-click="delete(hospital.id)" confirm="你确定要删除该医院吗？">删除</a>
+			</td>
+  	</tr>
+  </tbody>
+</table>
+<div class='pagination'>
+  <uib-pagination style="margin-left: 10px;margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+  <div style="float: right;position: relative;top: -20px;">
+    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+    <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+  </div>
+</div>
+
+<script type="text/ng-template" id="new_hospital.html">
+  <div class="modal-header">
+			<button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">新增医院</h4>
+  </div>
+  <div class="modal-body">
+		<div class="row">
+			<div class="col-md-6">
+				<label for="hos_name">医院名称</label>
+		    <input type="text" ng-model="hospital.name" class="form-control" id="hos_name" placeholder="医院名称">
+			</div>
+			<div class="col-md-6">
+				<label for="hos_level">医院等级</label>
+		    <select ng-model="hospital.level" class="form-control" id="hos_level">
+		      <option ng-repeat="level in levels" value={{$index}}>{{level}}</option>
+		    </select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				<label for="hos_nature" style="margin-top:10px;">医院性质</label>
+		    <select ng-model="hospital.nature" class="form-control" id="hos_nature">
+		      <option ng-repeat="nature in natures" value={{$index}}>{{nature}}</option>
+		    </select>
+			</div>
+			<div class="col-md-6">
+				<label for="hos_city" style="margin-top:10px;">所在城市</label>
+		    <select ng-model="hospital.city_id" class="form-control" id="hos_city">
+		      <option ng-repeat="city in cities" value={{city.id}}>{{city.name}}</option>
+		    </select>
+			</div>
+		</div>
+    <span ng-show="is_null" style="float:right;font-size:14px;color:red;">表单内容不能有空值!</span>
+		<div>
+			<button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+			<button style="float: left;margin-top: 10px;" ng-click="save(hospital)"class="btn btn-primary">确定</button>
+		</div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="edit_hospital.html">
+  <div class="modal-header">
+			<button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">编辑医院</h4>
+  </div>
+  <div class="modal-body">
+		<div class="row">
+			<div class="col-md-6">
+				<label for="hos_name">医院名称</label>
+		    <input type="text" ng-model="hospital.name" class="form-control" id="hos_name">
+			</div>
+			<div class="col-md-6">
+		    <label for="hos_level">医院等级</label>
+		    <select ng-model="hospital.level" class="form-control" id="hos_level">
+		      <option ng-repeat="level in levels" value={{$index}}>{{level}}</option>
+		    </select>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				<label for="hos_nature" style="margin-top:10px;">医院性质</label>
+		    <select ng-model="hospital.nature" class="form-control" id="hos_nature">
+		      <option ng-repeat="nature in natures" value={{$index}}>{{nature}}</option>
+		    </select>
+			</div>
+			<div class="col-md-6">
+		    <label for="hos_city" style="margin-top:10px;">所在城市</label>
+		    <select ng-model="hospital.city_id" class="form-control">
+		      <option ng-repeat="city in cities" value={{city.id}}>{{city.name}}</option>
+		    </select>
+			</div>
+		</div>
+		<div>
+			<button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+			<button style="float: left;margin-top: 10px;" ng-click="save(hospital)"class="btn btn-primary">确定</button>
+		</div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="device_hospital.html">
+  <div class="modal-header">
+			<button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{hospital.name}}设备情况列表</h4>
+  </div>
+  <div class="modal-body">
+      <table class="table table-bordered table-hover">
+        <thead>
+	        <tr>
+	          <th>检查项目</th>
+	          <th>检查设备情况</th>
+	          <th></th>
+	        </tr>
+        </thead>
+        <tbody id="project_device_tbody">
+          <tr ng-repeat="device_item in dic_hospital_device track by $index">
+            <td>
+              <select ng-model="dic_hospital_device[$index].id" class="form-control input-sm" style="width:80%">
+                <option ng-repeat="project in projects" value={{project.id}}>{{project.name}}</option>
+              </select>
+            </td>
+            <td>
+              <select ng-model="dic_hospital_device[$index].device_state" class="form-control input-sm" id="hos_device_state" style="width:70%">
+                <option ng-repeat="device_state in device_states" value={{$index}}>{{device_state}}</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-xs color_box" ng-click="delete_row($index)"  confirm="你确定要删除该类别吗？">删除</button>
+            </td>
+          </tr>
+					<tr ng-show="dic_hospital_device.length==0">
+            <td colspan="3">(无相关信息)</td>
+          </tr>
+        </tbody>
+      </table>
+			<div>
+				<button ng-click="save()" class="btn btn-primary">保存</button>
+				<button style="margin-left: 10px;"class="btn btn-success" type="button" ng-click="add_device_row()">新增</button>
+				<button style="margin-left: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+			</div>
+  </div>
+</script>

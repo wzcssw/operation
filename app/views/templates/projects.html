@@ -1,0 +1,415 @@
+<style media="screen">
+  a{
+      padding: 2px 10px;
+  }
+  a:hover{
+      cursor: pointer;
+  }
+	.wb_label {
+		position: relative;
+		min-width: 180px;
+		height: 40px;
+		float: left;
+		border: 1px solid #DAD8D8;
+		margin-right: 15px;
+		margin-bottom: 10px;
+		padding: 8px;
+	}
+	.wb_name {
+    float: left;
+    min-width: 77px;
+    text-align: left;
+    margin-left: 10px;
+	}
+  .app-modal-window .modal-dialog {
+    width: 85%;
+  }
+</style>
+<div class="table-operation">
+	<h3>项目与部位</h3>
+	<div style="height:30px;">
+	  <button style="float: right;margin-left: 10px;" type="button" class="btn btn-default">导出</button>
+    <div class='pagination'>
+      <uib-pagination style="margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+      <div style="float: right;position: relative;top: -20px;">
+        跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+        <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+      </div>
+    </div>
+    <button style="float: right;width: 5%;" ng-click="search()" class="btn btn-default">搜索</button>
+    <input style="width: 13%;float: right;margin-left: 5px;margin-right: 5px;" type="text" ng-model="q" class="form-control" id="hos_q" placeholder="名称 、拼音">
+    <select style="width: 6%;float: right;" ng-change="search()" ng-model="category_id" class="form-control">
+      <option value="">全部</option>
+      <option ng-repeat="category in categories" value={{category.id}}>{{category.name}}</option>
+    </select>
+    <button type="button" style="float: right;margin-left: 5px;margin-right: 5px;" class="btn btn-default" ng-click="open_add_project_modal()">新增项目</button>
+	</div>
+
+</div>
+<table class="table table-bordered table-hover">
+  	<tr style="background-color:#f6f6f6;">
+  	  <th>#</th>
+  	  <th>项目名称</th>
+  	  <th>类别</th>
+  	  <th>常用</th>
+  	  <th></th>
+  	</tr>
+  	<tr ng-repeat="project in projects">
+  		<td>{{project.id}}</td>
+  		<td>
+        <a uib-popover-template="'rename_project.html'" popover-title="项目名称" popover-trigger="outsideClick" ng-bind="project.name"></a>
+      </td>
+  		<td>
+        <a uib-popover-template="'edit_category.html'" popover-title="项目类别" popover-trigger="outsideClick" ng-bind="project.category" ng-click=""></a>
+      </td>
+  		<td>
+        <a ng-style="project.favorite==1?{color:'green'}:{}" uib-popover-template="'project_favorite_select.html'" popover-title="是否常用" popover-trigger="outsideClick" ng-bind="project.favorite==1?'常用':(project.favorite==0?'不常用':'')" ng-click="favorite_click(project)"></a>
+      </td>
+  		<td>
+        <a class="btn btn-primary btn-xs color_box" ng-click="open_bodies_modal(project)">检查类别</a>
+        <a class="btn btn-default btn-xs color_box" ng-click="open_details_modal(project)">已开通城市与医院</a>
+      </td>
+  	</tr>
+  </tbody>
+</table>
+<div class='pagination'>
+  <uib-pagination style="margin-left: 10px;margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+  <div style="float: right;position: relative;top: -20px;">
+    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+    <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+  </div>
+</div>
+
+<!-- 纳入项目 -->
+<script id="add_bodies_into_project.html" type="text/ng-template">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+    <h4 class="modal-title" id="myModalLabel">向{{project.name}}中纳入检查类别</h4>
+  </div>
+  <div class="modal-body" id="project-info-table">
+    <div class="projectInfo" style="position:relative;width:100%;overflow-y:auto;">
+      <div class="wb_label" ng-repeat="body in bodies">
+        <input type="checkbox" class='show_box_check' value="{{body.id}}" ng-model="body.isChecked" ng-init="body.isChecked=contains(body_id_arr,body.id)"/>
+        <p class="wb_name">{{body.name}}</p>
+      </div>
+    </div>
+		<button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="float: left;margin-top: 10px;" ng-click="save()" class="btn btn-primary">保存</button>
+    <button class="btn btn-success" type="button" ng-click="add_body()">新增检查类别</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="project_favorite_select.html">
+  <div class="form-group">
+      <select class="form-control" ng-model="project.favorite" ng-change="favorite_change(project)"
+        ng-options="o.v as o.n for o in [{ n: '不常用', v: 0 }, { n: '常用', v: 1 }]">
+      </select>
+  </div>
+</script>
+
+<script type="text/ng-template" id="rename_project.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="project.name"/>
+        <button class="form-control btn-primary" ng-click="rename_ok_btn_click(project)">确定</button>
+    </div>
+  </form>
+</script>
+
+<script type="text/ng-template" id="edit_category.html">
+  <form class="form-inline">
+    <select class="form-control" ng-model="project.category_id" ng-change="" style="margin-bottom:8px;width:100%"
+      ng-options="o.v as o.n for o in [{ n: '检查', v: 1 }, { n: '检验', v: 2 }]">
+    </select>
+    <div class="form-group">
+        <button class="form-control btn-primary btn-sm" ng-click="">确定</button>
+        <button class="form-control btn-info btn-sm" style="margin-left:8px;" ng-click="open_edit_category_modal()">编辑项目类别</button>
+    </div>
+  </form>
+</script>
+
+<script type="text/ng-template" id="edit_project_category.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">项目类别</h4>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered table-hover">
+      	<tr style="background-color:#f6f6f6;">
+      	  <td>#</td>
+      	  <td>项目类别名称</td>
+          <td>project名称</td>
+      	  <td>body名称</td>
+          <td>bodyMode名称</td>
+      	  <td>是否开启</td>
+      	  <td>操作</td>
+      	</tr>
+      	<tr ng-repeat="category in categories">
+      		<td>{{category.id}}</td>
+      		<td>{{category.name}}</td>
+      		<td>{{category.project_name}}</td>
+          <td>{{category.body_name}}</td>
+      		<td>{{category.body_mode_name}}</td>
+      		<td>
+    				  <a ng-style="l.state?{color:'green'}:{}" uib-popover-template="'myPopSelectTemplate.html'" popover-title="是否开启" popover-trigger="outsideClick" ng-bind="category.flag?'是':'否'" ng-click="select_flag(category)"></a>
+    			</td>
+      		<td>
+    				<a class="btn btn-default btn-success btn-xs" ng-click="update(category)">编辑</a>
+      			<a class="btn btn-default btn-danger btn-xs"  ng-click="delete(category.id)" confirm="你确定要删除该类别吗？">删除</a>
+    			</td>
+      	</tr>
+    </table>
+    <button style="margin: 10px;" class="btn btn-sm btn-primary" type="button" ng-click="open_new()">添加项目类别</button>
+    <button  class="btn btn-sm btn-warning" type="button" ng-click="cancel()">关闭</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="modify_rank.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="bm.rank" type="number" style="width:65%"/>
+        <button class="form-control btn-primary btn-sm" ng-click="modify_rank_ok_btn(bm)">确定</button>
+    </div>
+  </form>
+</script>
+
+<script type="text/ng-template" id="rename_body_mode.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="bm.name" style="width:65%"/>
+        <button class="form-control btn-primary btn-sm" ng-click="modify_rank_ok_btn(bm)">确定</button>
+    </div>
+  </form>
+</script>
+
+<script type="text/ng-template" id="add_body.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">新增检查部位</h4>
+  </div>
+  <div class="modal-body">
+    <label>检查部位名称</label>
+    <input  type="text" ng-model="body.name" class="form-control" style="margin-bottom:10px">
+    <label>选择类型</label>
+    <select ng-model="body.category_id" class="form-control">
+      <option value="">选择类型</option>
+      <option ng-repeat="category in categories" value={{category.id}}>{{category.name}}</option>
+    </select>
+    <br/>
+    <button  class="btn btn-sm btn-primary" type="button" ng-click="save()">保存</button>
+    <button  class="btn btn-sm btn-warning" type="button" ng-click="cancel()">关闭</button>
+  </div>
+</script>
+
+<!--- 添加新body_mode --->
+<script type="text/ng-template" id="add_body_modes_modal.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">向{{body.name}}中添加新的部位</h4>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label>检查检验部位组合名称</label>
+      <input type="hidden" ng-model="new_bm.body_id" class="form-control">
+      <input type="text" ng-model="new_bm.name" class="form-control" placeholder="检查检验部位组合名称">
+      <label>详情</label>
+      <input type="text" ng-model="new_bm.details" class="form-control" placeholder="详情">
+      <label>备注</label>
+      <input type="text" ng-model="new_bm.remark" class="form-control" placeholder="备注">
+      <button style="margin-left: 10px;margin-top: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+      <button style="float: left;margin-top: 10px;" ng-click="save(new_bm)" class="btn btn-primary">保存</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="edit_project_bodies.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{project.name}}</h4>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered table-hover">
+      <tr>
+      <td>#</td>
+      <td>检查类别/检验类别名称</td>
+      <td>类别</td>
+      <td>创建时间</td>
+      <td></td>
+    </tr>
+    <tr ng-repeat="body in bodies">
+      <td>{{body.id}}</td>
+      <td>{{body.name}}</td>
+      <td>{{body.category_id==1?'检查':(body.category_id==2?'检验':'其他')}}</td>
+      <td>{{body.created_at | date:'yyyy-MM-dd'}}</td>
+      <td>
+        <a class="btn btn-info btn-xs color_box" ng-click="body_modes_modal(body)">检查检验部位组合</a>
+      </td>
+    </tr>
+    <tr ng-show="bodies.length==0">
+      <td colspan=5>
+        (无相关数据)
+      </td>
+    </tr>
+    <tr ng-show='projects.length==0'>
+      <td colspan=8>无相关数据</td>
+    </tr>
+    </table>
+    <button style="margin: 10px;" class="btn btn-sm btn-primary" type="button" ng-click="add_bodies_into_project(project)">纳入检查类别</button>
+    <button  class="btn btn-sm btn-warning" type="button" ng-click="cancel()">关闭</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="project_details_modal.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{project.name}}-已开通城市与医院</h4>
+  </div>
+  <div class="modal-body">
+    <uib-tabset active="active" justified="false">
+      <uib-tab ng-repeat="city in cities" index="$index" heading="{{city.name}}">
+        <table class="table table-bordered table-hover">
+          <tr>
+            <th>#</th>
+            <th>医院名称</th>
+            <th>医院等级</th>
+            <th>医院性质</th>
+          </tr>
+          <tr ng-repeat="hospital in city.hospitals">
+            <td>{{hospital.id}}</td>
+            <td>{{hospital.name}}</td>
+            <td>{{hospital.level}}</td>
+            <td>{{hospital.nature}}</td>
+          </tr>
+          <tr ng-show="city.hospitals.length==0">
+            <td colspan=4>
+              (暂无数据)
+            </td>
+          </tr>
+        </table>
+      </uib-tab>
+    </uib-tabset>
+  </div>
+</script>
+
+<script type="text/ng-template" id="body_modes_modal.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">检查检验部位组合</h4>
+  </div>
+  <div class="modal-body">
+    <div class='pagination' style="margin: 0px;margin-top: 20px">
+      <uib-pagination style="margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged_m()" items-per-page=10 total-items="total_count_m" ng-model="current_page_m" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+      <div style="float: right;position: relative;top: -20px;">
+        跳转到第<input style="width: 40px;" id="go_page_m" type="text"></input>页
+        <button type="button" class="btn btn-sm btn-default" ng-click="setPage_m()">确定</button>
+      </div>
+    </div>
+    <table class="table table-bordered table-hover">
+      <tr>
+      <td>#</td>
+      <td>检查检验部位组合名称</td>
+      <td>创建时间</td>
+      <td>排序</td>
+      <td></td>
+    </tr>
+    <tr ng-repeat="bm in body_modes">
+      <td>{{bm.id}}</td>
+      <td>
+        <a uib-popover-template="'rename_body_mode.html'" popover-title="检查检验部位组合名称" popover-trigger="outsideClick" ng-bind="bm.name||'点击设置'"></a>
+      </td>
+      <td>{{bm.created_at | date:'yyyy-MM-dd'}}</td>
+      <td>
+        <a uib-popover-template="'modify_rank.html'" popover-title="排序" popover-trigger="outsideClick" ng-bind="bm.rank||'点击设置'"></a>
+      </td>
+      <td>
+        <a class="btn btn-default btn-danger btn-xs" ng-click="delete_bm(bm)" confirm="你确定要删除该部位吗？">删除</a>
+      </td>
+    </tr>
+    <tr ng-show='projects.length==0'>
+      <td colspan=8>无相关数据</td>
+    </tr>
+    </table>
+    <button style="margin: 10px;" class="btn btn-sm btn-success" type="button" ng-click="open_add_body_mode_modal(body)">新增检查检验部位组合</button>
+    <button  class="btn btn-sm btn-warning" type="button" ng-click="cancel()">关闭</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="myPopSelectTemplate.html">
+    <div class="form-group">
+        <select class="form-control"  ng-model="placement.selected" ng-change="flag_change()" ng-options="o as o for o in placement.options"></select>
+    </div>
+</script>
+
+<script type="text/ng-template" id="update_categories.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">更新类别</h4>
+  </div>
+  <div class="modal-body">
+    <label for="hos_name">名称</label>
+    <input type="text" ng-model="category.name" class="form-control">
+    <label for="hos_level">project名称</label>
+    <input type="text" ng-model="category.project_name" class="form-control">
+    <label for="hos_level">body名称</label>
+    <input type="text" ng-model="category.body_name" class="form-control">
+    <label for="hos_level">bodyMode名称</label>
+    <input type="text" ng-model="category.body_mode_name" class="form-control">
+    <button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="float: left;margin-top: 10px;" ng-click="save(category)"class="btn btn-primary">确定</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="new_categories.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">新增类别</h4>
+  </div>
+  <div class="modal-body">
+    <label for="hos_name">名称</label>
+    <input type="text" ng-model="category.name" class="form-control" placeholder="名称">
+    <label for="hos_level">project名称</label>
+    <input type="text" ng-model="category.project_name" class="form-control" placeholder="project名称">
+    <label for="hos_level">body名称</label>
+    <input type="text" ng-model="category.body_name" class="form-control" placeholder="body名称">
+    <label for="hos_level">bodyMode名称</label>
+    <input type="text" ng-model="category.body_mode_name" class="form-control" placeholder="bodyMode名称">
+    <button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="float: left;margin-top: 10px;" ng-click="save(category)"class="btn btn-primary">确定</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="add_project.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">新增项目</h4>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="hos_name">项目名称</label>
+        <input type="text" ng-model="new_pj.name" class="form-control" placeholder="名称">
+        <label for="hos_level">项目类别</label>
+        <select ng-model="new_pj.category_id" class="form-control">
+          <option ng-repeat="category in categories" value={{category.id}}>{{category.name}}</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="hos_level">备注</label>
+        <textarea rows=4 ng-model="new_pj.remark" class="form-control" placeholder="备注"></textarea>
+      </div>
+    </div>
+    <br/>
+    <div class="row">
+      <div class="col-md-12">
+        <label for="hos_level" style="float:left">业务开展城市</label>
+      </div>
+      <div class="col-md-12">
+        <div class="wb_label ng-scope"  style="min-width:110px;" ng-repeat="city in cities">
+          <input type="checkbox" class="show_box_check ng-pristine ng-untouched ng-valid ng-empty" value={{city.id}} ng-model="city.opened_cities" ng-init="city.opened_cities=false">
+          <p class="wb_name ng-binding">{{city.name}}</p>
+        </div>
+      </div>
+    </div>
+    <button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="float: left;margin-top: 10px;" ng-click="save(new_pj,cities)"class="btn btn-primary">确定</button>
+  </div>
+</script>

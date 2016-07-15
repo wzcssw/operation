@@ -1,0 +1,23 @@
+{
+  "name": "txconfig",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "wangsen <wangs@tongxinyiliao.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-bootstrap": "^1.3.2",
+    "bootstrap": "^3.3.6",
+    "angular-ui-router": "^0.2.18"
+  }
+}

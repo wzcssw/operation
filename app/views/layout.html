@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>配置系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="styles/lib/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/app.css">
+    <link rel="shortcut icon" type="image/x-icon" media="screen" href="images/tongxin_sm.png">
+    <script src="scripts/lib/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="scripts/lib/bootstrap.min.js"></script>
+</head>
+<body>
+<% if (locals.user){ %>
+    <input type="number" value="1" id="userIsLogin" hidden>
+    <nav class="navbar navbar-default" role="navigation" style="margin-bottom: 0" ng-controller="navController">
+        <div class="navbar-header">
+            <a href="/" class="navbar-brand" style="width:140px">
+              <img src="images/tongxin.png" alt="tongxin"/>
+              <span style="float:left;margin-top:-24px;margin-left:33px;display:block;">配置系统</span>
+            </a>
+        </div>
+        <ul class="nav navbar-nav navbar-left hidden-xs">
+            <li ng-class="{ active: isActive('/dic_hospitals')}"><a href="/#/dic_hospitals">医院字典</a></li>
+            <li ng-class="{ active: isActive('/hospitals')}"><a href="/#/hospitals">合作医院</a></li>
+            <li ng-class="{ active: isActive('/projects')}"><a href="/#/projects">项目与部位</a></li>
+            <li ng-class="{ active: isActive('/cities')}"><a href="/#/cities">城市管理</a></li>
+            <li ng-class="{ active: isActive('/operation_logs')}"><a href="/#/operation_logs">日志管理</a></li>
+
+        </ul>
+        <ul class="nav navbar-nav navbar-right hidden-xs" style="margin-right: 15px">
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    <%= user.realname %>
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="btn" ng-click="open_update_password_modal()">修改密码</a></li>
+                    <li class="divider"></li>
+                    <li><a ng-click="logout()" class="btn">退出</a></li>
+                </ul>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right hidden-xs" style="margin-right: 15px">
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    系统管理 <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#/hospitals">合作医院</a></li>
+                    <li><a href="#/projects">项目与部位</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#/hospital">医院字典</a></li>
+                    <li><a href="#/cities">城市管理</a></li>
+                    <li><a href="#/operation_logs">日志管理</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+<% } %>
+<div class="container-fluid">
+  <div clss="container">
+  <%- body %>
+  </div>
+</div>
+</body>
+</html>

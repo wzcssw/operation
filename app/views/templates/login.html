@@ -1,0 +1,61 @@
+<style>
+  body {
+   background: url('images/1.jpg') no-repeat center center fixed;
+   -webkit-background-size: cover;
+   -moz-background-size: cover;
+   -o-background-size: cover;
+   background-size: cover;
+  }
+</style>
+<div class="container" onkeydown="KeyDown(event);">
+    <div class="row">
+        <div class="col-md-3 col-md-offset-3 col-sm-5 col-sm-offset-2 col-xs-7 col-xs-offset-1" style="padding: 50px 0;margin-left:5%;margin-top:5%;">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                   <img src="images/tongxin.png" alt="tongxin"/>
+                   <span style="margin-left:8px;font-size:16.5px;">配置系统</span>
+                </div>
+                <div class="panel-body" style="height:270px;">
+                    <div class="form-group" style="padding-top:20px;">
+                      <div class="input-group">
+                        <span class="input-group-addon">
+                          <i class="glyphicon glyphicon-user"></i>
+                        </span>
+                        <input type="text" ng-model="username" class="form-control" id="username"  placeholder="用户名">
+                      </div>
+                    </div>
+                    <div class="form-group" style="padding-top:10px;">
+                        <div class="input-group">
+                          <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+                          </span>
+                          <input type="password" ng-model="password" class="form-control" id="password" placeholder="密码">
+                        </div>
+                    </div>
+                    <div class="form-group" style="padding-top:10px;">
+                        <div class="input-group" style="width:100%">
+                          <button id="submit" class="btn btn-primary" style="padding-top:10px;width:100%" ng-click="login()">登录</button>
+                        </div>
+                    </div>
+
+                    <br/>
+                    <a href="#" style="float:left">忘记密码?</a><br/>
+                    <p style="color:rgba(151, 152, 152, 0.7)">同心医联科技有限公司</p>
+                </div>
+                <div class="panel-footer" ng-show="error_msg">
+                   <span style="color:#cc3f44"><i class="glyphicon glyphicon-remove"></i> {{error_msg}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+  function KeyDown(e){
+    e = window.event || e;
+    var ke = e.keyCode || e.which;
+    if(ke == 13){
+      $("#submit").click();
+    }
+  }
+</script>

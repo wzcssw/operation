@@ -1,0 +1,585 @@
+<style media="screen">
+  a{
+      padding: 2px 10px;
+  }
+  a:hover{
+      cursor: pointer;
+  }
+	.wb_label {
+		position: relative;
+		min-width: 180px;
+		height: 40px;
+		float: left;
+		border: 1px solid #DAD8D8;
+		margin-right: 15px;
+		margin-bottom: 10px;
+		padding: 8px;
+	}
+	.wb_name {
+    float: left;
+    min-width: 77px;
+    text-align: left;
+    margin-left: 10px;
+	}
+  .app-modal-window .modal-dialog {
+    width: 85%;
+  }
+</style>
+<div class="table-operation">
+	<h3>合作医院</h3>
+	<div style="height:30px;">
+	  <button style="float: right;margin-left: 10px;" type="button" class="btn btn-default">导出</button>
+    <div class='pagination'>
+      <uib-pagination style="margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+      <div style="float: right;position: relative;top: -20px;">
+        跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+        <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+      </div>
+    </div>
+    <button style="float: right;width: 5%;" ng-click="search()" class="btn btn-default">搜索</button>
+    <input style="width: 13%;float: right;margin-left: 5px;margin-right: 5px;" type="text" ng-model="q" class="form-control" id="hos_q" placeholder="名称 、拼音">
+    <select style="width: 6%;float: right;" ng-change="search()" ng-model="city_id" class="form-control">
+      <option value="">全部</option>
+      <option ng-repeat="city in cities" value={{city.id}}>{{city.name}}</option>
+    </select>
+    <button type="button" style="float: right;margin-left: 5px;margin-right: 5px;" class="btn btn-default" ng-click="open_new()">新增合作医院</button>
+	</div>
+
+</div>
+<table class="table table-bordered table-hover">
+  	<tr style="background-color:#f6f6f6;">
+  	  <td>#</td>
+  	  <td>医院名称</td>
+  	  <td>城市</td>
+  	  <td>分流医院</td>
+  	  <td></td>
+  	  <td></td>
+  	</tr>
+  	<tr ng-repeat="hospital in self.hospitals">
+  		<td>{{hospital.id}}</td>
+  		<td>{{hospital.name}}</td>
+  		<td>{{hospital.city_zh}}</td>
+  		<td>
+        <a ng-click="open_bridging_hospitals_modal(hospital)">
+          {{ show_bridging_hospital_arr(hospital.bridgings) }}
+        </a>
+        <a ng-show="hospital.bridgings.length==0" ng-click="open_bridging_hospitals_modal(hospital)">添加</a>
+      </td>
+  		<td>
+        <a class="btn btn-primary btn-xs color_box" ng-click="open_hospital_project('lg',hospital.id,hospital)">开展项目</a>
+				<a class="btn btn-default btn-xs color_box" ng-click="open_assistant(hospital)">合作人员</a>
+        <a class="btn btn-default btn-xs color_box" ng-click="open_device(hospital)">设备信息</a>
+        <a class="btn btn-default btn-xs color_box" ng-click="open_detail(hospital)">详情</a>
+			</td>
+      <td>
+        <a ng-style="hospital.flag?{color:'green'}:{color:'red'}" uib-popover-template="'hospital_flag_select.html'" popover-title="开启医院" popover-trigger="outsideClick" ng-bind="hospital.flag?'开启':'关闭'" ng-click="flag_click(hospital)"></a>
+      </td>
+  	</tr>
+  </tbody>
+</table>
+<div class='pagination'>
+  <uib-pagination style="margin-left: 10px;margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+  <div style="float: right;position: relative;top: -20px;">
+    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+    <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+  </div>
+</div>
+
+<!-- map dialog -->
+<script type="text/ng-template" id="hospital_detail.html">
+  <div class="modal-header"  align="center">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{hospital.name}}</h4>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+			<div class="col-md-4">
+				<label for="hos_address">地址</label>
+		    <input type="text" ng-model="hospital.address" class="form-control" id='hos_address'>
+		    <label for="hos_lnglat">坐标</label>
+		    <input type="text" ng-model="lnglat" class="form-control"  id='hos_lnglat'>
+		    <label for="hos_bus_line">行车路线</label>
+		    <input type="text" ng-model="hospital.bus_line" class="form-control"  id='hos_bus_line'>
+		    <label for="created_at">创建时间</label>
+		    <input type="text" value="{{hospital.created_at | date:'yyyy-MM-dd'}}" class="form-control"  id='hos_created_at' disabled>
+				<label for="hos_remark">备注</label>
+		    <input type="text" ng-model="hospital.remark" class="form-control"  id='hos_remark'>
+        <label for="hos_email">电子邮箱</label>
+        <div>
+          <div class="input-group">
+            <span class="input-group-addon">
+              <input type="checkbox" aria-label="电子邮箱" ng-model="hospital.should_send_email" />开启
+            </span>
+            <textarea rows=1 class="form-control" id='hos_email' ng-model="hospital.email" placeholder="多个邮箱请用','分隔"></textarea>
+          </div>
+        </div>
+		    <label for="hos_intro">介绍</label>
+		    <textarea rows=3 class="form-control"  id='hos_intro' ng-model="hospital.intro"></textarea>
+				<div>
+					<button style="margin: 10px;" class="btn btn-sm btn-warning" type="button" ng-click="cancel()">取消</button>
+		    	<button style="float: left;margin-top: 10px;" ng-click="save(hospital)"class="btn btn-sm btn-primary">确定</button>
+				</div>
+			</div>
+			<div class="col-md-8">
+				<img ng-src="{{map_src}}" alt='map'/>
+			</div>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="assistants_detail.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{hospital.name}}-合作人员</h4>
+  </div>
+  <div class="modal-body">
+			<table class="table table-bordered table-hover">
+				<tr>
+					<th>#</th>
+					<th>姓名</th>
+					<th>手机</th>
+					<th>地址</th>
+					<th>是否接收短信</th>
+					<th>创建时间</th>
+					<th>备注</th>
+					<th>操作</th>
+				</tr>
+        <tr ng-show="hospital.hospital_assistants.length==0">
+          <td colspan="8">(没有相关合作人员记录)</td>
+        </tr>
+				<tr ng-repeat="assistant in hospital.hospital_assistants">
+					<td>{{assistant.id}}</td>
+					<td>
+						<a uib-popover-template="'myPopInputTemplate.html'" ng-style="{color:'black'}" popover-title="{{dynamicPopover.title}}" popover-trigger="outsideClick" ng-bind="assistant.name || '点击设置'" ng-click="select_click('name', assistant)"></a>
+					</td>
+					<td>
+            <a uib-popover-template="'myPopInputTemplate.html'" ng-style="{color:'black'}" popover-title="{{dynamicPopover.title}}" popover-trigger="outsideClick" ng-bind="assistant.phone || '点击设置'" ng-click="select_click('phone', assistant)"></a>
+          </td>
+					<td>
+            <a uib-popover-template="'myPopInputTemplate.html'"ng-style="{color:'black'}" popover-title="{{dynamicPopover.title}}" popover-trigger="outsideClick" ng-bind="assistant.address || '点击设置'" ng-click="select_click('address', assistant)"></a>
+          </td>
+					<td>
+            <a uib-popover-template="'myPopSelectTemplate.html'" ng-style="assistant.state=='issend'?{color:'green'}:{}" popover-title="是否接收短信" popover-trigger="outsideClick" ng-bind="assistant.state=='issend'?'是':'否' " ng-click="select_click('state', assistant)"></a>
+					</td>
+					<td ng-style="{color:'black'}" >{{assistant.created_at | date:'yyyy-MM-dd'}}</td>
+					<td>
+            <a uib-popover-template="'myPopInputTemplate.html'" ng-style="{color:'black'}" popover-title="{{dynamicPopover.title}}" popover-trigger="outsideClick" ng-bind="assistant.remark || '点击设置'" ng-click="select_click('remark', assistant)"></a>
+          </td>
+					<td>
+					  <a class="btn btn-danger btn-xs color_box" ng-click="delete_click(assistant)" ng-show="assistant.id" confirm="你确定要移除该合作人员吗？">删除</a>
+					  <a class="btn btn-success btn-xs color_box" ng-show="!assistant.id" ng-click="add_click(assistant,hospital.id)">保存</a>
+					</td>
+				</tr>
+			</table>
+			<div>
+        <button class="btn btn-primary" ng-click="add_assistant_row()">新增</button>
+        <button class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+			</div>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="myPopInputTemplate.html">
+    <div class="form-group form-inline">
+        <input type="text" ng-model="modal_template.value" class="form-control">
+        <button type="button" class="btn btn-success" ng-click="input_click()">确定</button>
+    </div>
+</script>
+
+<script type="text/ng-template" id="myPopSelectTemplate.html">
+    <div class="form-group">
+        <select class="form-control" ng-model="modal_template.selected" ng-change="select_change()">
+          <option value="issend">是</option>
+          <option value="isnotsend">否</option>
+        </select>
+    </div>
+</script>
+
+<script type="text/ng-template" id="hospital_project.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{hospital.name}}开展项目情况</h4>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered table-hover">
+      <tr>
+      <td>检查项目名称</td>
+      <td>窗口电话</td>
+      <td>状态</td>
+      <td>医保情况</td>
+      <td>操作</td>
+    </tr>
+    <tr ng-repeat="project in projects">
+      <td>{{project.project}}</td>
+      <td>{{project.windows_phone}}</td>
+      <td><button ng-style="project.status_zh=='忙碌'?{color:'red'}:{color:'green'}" type="button" class="btn btn-link btn-xs" ng-click="change_status(project,'status')" confirm="你将修改状态, 确定要修改吗？">{{project.status_zh || "正常"}}</button></td>
+      <td><button type="button" ng-style="project.mbf_zh == '无医保'?{color:'red'}:{color:'green'}" class="btn btn-link btn-xs" ng-click="change_status(project,'mbf')" confirm="你将修改状态, 确定要修改吗？">{{project.mbf_zh || "无医保"}}</button></td>
+      <td>
+        <a uib-popover-template="'hospital_bodies_pop_input.html'" popover-placement="left-bottom" class="btn btn-primary btn-xs color_box" popover-title="部位" popover-trigger="outsideClick" ng-click="bodies_click(project)">部位与价格</a>
+        <button class="btn btn-default btn-xs color_box" type="button" ng-click="open_hospital_resources(project.project_id)">设置医院资源</button>
+        <button class="btn btn-default btn-xs color_box" type="button" ng-click="open_project_detail_modal(project)">编辑详情</button>
+      </td>
+    </tr>
+    <tr ng-show='projects.length==0'>
+      <td colspan=8>无相关数据</td>
+    </tr>
+    </table>
+    <button style="margin: 10px;" class="btn btn-sm btn-primary" type="button" ng-click="add_project()">编辑开展项目</button>
+    <button  class="btn btn-sm btn-warning" type="button" ng-click="cancel()">关闭</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="bridging_hospitals.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">分流医院 ({{hospital.name}})</h4>
+  </div>
+  <div class="modal-body container">
+    <div class="col-md-3" style="height: 50px" ng-repeat="brige in opened_hospitals" ng-show="brige.id!=hospital.id">
+      <label>
+        <input type="checkbox"  value="{{brige.id}}" ng-init="brige.isChecked=bridging_contains(hospital.bridgings ,brige.id)" ng-model="brige.isChecked">
+        <span>{{brige.name}}</span>
+      </label>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div style="float:left">
+      <button class="btn btn-success" ng-click="save(opened_hospitals)">保存</button>
+      <button class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    </div>
+  </div>
+</script>
+
+<!-- 纳入项目 -->
+<script id="add_project.html" type="text/ng-template">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+    <h4 class="modal-title" id="myModalLabel">纳入项目到医院<small>   {{items.hospital.name}}</small></h4>
+  </div>
+  <div class="modal-body" id="project-info-table">
+    <div class="projectInfo" style="position:relative;width:100%;overflow-y:auto;">
+      <div class="wb_label" ng-repeat="project in projects">
+        <input type="checkbox" class='show_box_check' value="{{project.id}}" ng-model="project.isChecked" ng-init="project.isChecked=contains(items.project_name_arr,project.name)"/>
+        <p class="wb_name">{{project.name}}</p>
+      </div>
+    </div>
+		<button style="margin: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="float: left;margin-top: 10px;" ng-click="save()" class="btn btn-primary">确定</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="edit_hospital_resources.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">编辑医院资源</h4>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="hos_address">设备数</label>
+        <input type="number" ng-model="co_hospital_resource.device_count" class="form-control" placeholder="设备数">
+        <label for="hos_address">吞吐量/h</label>
+        <input type="number" ng-model="co_hospital_resource.device_hour_output" class="form-control" placeholder="吞吐量/h">
+        <label for="hos_address">过期时间(分钟)</label>
+        <input type="number" ng-model="co_appointment_config.opration_expire_time" class="form-control" placeholder="过期时间(分钟)">
+      </div>
+      <div class="col-md-6">
+        <label for="hos_address">开始时间(整点)</label>
+        <input type="number" ng-model="co_appointment_config.begin_at" class="form-control" placeholder="开始时间(整点)">
+        <label for="hos_address">结束时间(整点)</label>
+        <input type="number" ng-model="co_appointment_config.end_at" class="form-control" placeholder="结束时间(整点)">
+      </div>
+    </div>
+    <button style="margin-top: 10px;" class="btn btn-primary" type="button" ng-click="save()">保存</button>
+    <button style="margin-top: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="edit_hospital_bodies_price.html">
+  <div class="modal-header" align="center">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{items.hospital.name}}-{{items.project.project}}-{{items.body.name}}-价格表</h4>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered table-hover">
+      <tr>
+        <th>检查项目名称</th>
+        <th>医生价格(元) <a uib-popover-template="'multipleModifyPriceTemplate.html'" popover-title="批量修改" popover-trigger="outsideClick" ng-click="choose_popover('price')"><i class="glyphicon glyphicon-pencil"></i></a> </th>
+        <th>医院价格(元) <a uib-popover-template="'multipleModifyPriceTemplate.html'" popover-title="批量修改" popover-trigger="outsideClick" ng-click="choose_popover('income_price')"><i class="glyphicon glyphicon-pencil"></i></a> </th>
+        <th>下单可见  <a uib-popover-template="'multipleModifyStateTemplate.html'" popover-title="批量修改" popover-trigger="outsideClick" ng-click="choose_popover('state')"><i class="glyphicon glyphicon-pencil"></i></a> </th>
+      </tr>
+      <tr ng-repeat="pr in project_relations">
+        <td ng-bind="pr.body_mode_name" ></td>
+        <td>
+          <a uib-popover-template="'priceInputTemplate.html'" popover-title="医生价格" popover-trigger="outsideClick" ng-bind="pr.price" ng-click="price_input_click(pr)"></a>
+        </td>
+        <td>
+          <a uib-popover-template="'incomePriceInputTemplate.html'" popover-title="医院价格" popover-trigger="outsideClick" ng-bind="pr.income_price" ng-click="income_price_input_click(pr)"></a>
+        </td>
+        <td>
+          <a uib-popover-template="'statusPopSelectTemplate.html'" ng-style="pr.state=='visible'?{color:'green'}:{}" popover-title="下单可见" popover-trigger="outsideClick" ng-bind="pr.state=='visible'?'可见':'不可见'" ng-click="select_click(pr)"></a>
+        </td>
+      </tr>
+      <tr ng-show="project_relations.length==0">
+        <td colspan=4>无相关数据</td>
+      </tr>
+    </table>
+  </div>
+</script>
+
+<script type="text/ng-template" id="hospital_bodies_pop_input.html">
+  <div>
+      <span ng-repeat="body in project_bodies">
+        <a ng-click="open_edit_price(body)" style="display: inline-block;width:120px;height:27px;">{{body.name}}</a>
+      </span>
+  </div>
+</script>
+
+<script type="text/ng-template" id="statusPopSelectTemplate.html">
+    <div class="form-group">
+        <select class="form-control" ng-model="pr.state" ng-change="select_change()">
+          <option value="visible">可见</option>
+          <option value="invisible">不可见</option>
+        </select>
+    </div>
+</script>
+
+<!-- 医院价格 -->
+<script type="text/ng-template" id="incomePriceInputTemplate.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="pr.income_price"/>
+        <button class="form-control btn-primary" ng-click="income_price_btn_click()">OK</button>
+    </div>
+  </form>
+</script>
+
+<!-- 医生价格 -->
+<script type="text/ng-template" id="priceInputTemplate.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="pr.price"/>
+        <button class="form-control btn-primary" ng-click="price_btn_click()">OK</button>
+    </div>
+  </form>
+</script>
+
+<!-- 批量修改价格 -->
+<script type="text/ng-template" id="multipleModifyPriceTemplate.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="multipleModifyPrice" placeholder="批量修改价格"/>
+        <button class="form-control btn-primary" ng-click="multipleModifyPriceBtnClick(multipleModifyPrice)">确定</button>
+    </div>
+  </form>
+</script>
+<!-- 批量修改状态 -->
+<script type="text/ng-template" id="multipleModifyStateTemplate.html">
+  <form class="form-inline">
+    <select ng-model="multipleModifyState" class="form-control">
+      <option value="visible">可见</option>
+      <option value="invisible">不可见</option>
+    </select>
+    <button class="form-control btn-primary" ng-click="multipleModifyPriceBtnClick(multipleModifyState)">确定</button>
+  </form>
+</script>
+
+<script type="text/ng-template" id="hospital_device.html">
+  <div class="modal-header" align="center">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">{{hospital.name}}设备信息</h4>
+  </div>
+  <div class="modal-body">
+    <table class="table table-bordered table-hover">
+      <tr>
+        <th>设备简介</th>
+        <th>设备详情</th>
+        <th>设备图片</th>
+        <th>操作</th>
+      </tr>
+      <tr ng-repeat="hd in hospital_devices">
+        <td>{{hd.project_title}}</td>
+        <td>{{hd.project_content}}</td>
+        <td>
+          <a ng-show="hd.project_image!=''">
+            <img ng-src="{{show_img(hd.project_image)}}" ng-click="open_img(hd.project_image)" width="70">
+          </a>
+        </td>
+        <td>
+          <button class="btn btn-primary btn-xs" type="button" ng-click="update(hd)">编辑</button>
+          <button class="btn btn-danger btn-xs" type="button" ng-click="delete(hd,$index)" confirm="你确定要移除该医院设备吗?">删除</button>
+        </td>
+      </tr>
+      <tr ng-show="hospital_devices.length==0">
+        <td colspan=4>(无相关信息)</td>
+      </tr>
+    </table>
+    <button style="margin-top: 10px;" class="btn btn-success" type="button" ng-click="create()">新增</button>
+    <button style="margin-top: 10px;" class="btn btn-warning" type="button" ng-click="close()">关闭</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="create_hospital_device.html">
+  <div class="modal-header" align="center">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">修改医院设备信息</h4>
+  </div>
+  <div class="modal-body">
+    <label>设备简介</label>
+    <input type="text" ng-model="hospital_device.project_title" class="form-control">
+    <label>设备详情</label>
+    <textarea ng-model="hospital_device.project_content" class="form-control"></textarea>
+    <label>设备图片</label>
+    <input type="text" ng-model="hospital_device.project_image" class="form-control" >
+    <button style="margin-top: 10px;" class="btn btn-primary" type="button" ng-click="save()">保存</button>
+    <button style="margin-top: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+  </div>
+</script>
+
+<!-- 显示图片详情 -->
+<script type="text/ng-template" id="showImgTemplate.html">
+    <div class="modal-body">
+        <img ng-src="{{popover_img_url}}" alt='img' width=550/>
+    </div>
+</script>
+
+<script type="text/ng-template" id="hospital_flag_select.html">
+  <div class="form-group">
+      <select class="form-control" ng-model="hospital.flag" ng-change="flag_change(hospital)"
+        ng-options="o.v as o.n for o in [{ n: '关闭', v: false }, { n: '开启', v: true }]">
+      </select>
+  </div>
+</script>
+
+<script type="text/ng-template" id="edit_project_detail.html">
+  <div class="modal-header">
+      <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">项目详情<small>    {{hospital.name}}-{{project.project}}</small></h4>
+  </div>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-md-6">
+        <label>窗口电话</label>
+        <input type="text" class="form-control" placeholder="窗口电话" ng-model="project.windows_phone">
+        <label>就诊注意事项</label>
+        <input type="text" class="form-control" placeholder="就诊注意事项" ng-model="project.inspection_notes">
+      </div>
+      <div class="col-md-6">
+        <label>短信填充信息</label>
+        <textarea rows="4" ng-model="project.app_make_sms" class="form-control" placeholder="短信填充信息"></textarea>
+      </div>
+    </div>
+    <hr/>
+    <div class="row">
+      <div class="col-md-12">
+        <label>就诊流程</label>
+        <table class="table table-bordered table-hover">
+          <tr>
+            <th>#</th>
+            <th width=95>就检步骤</th>
+            <th>步骤说明</th>
+            <th></th>
+          </tr>
+          <tr ng-repeat="workflow in project.inspection_workflows track by $index">
+            <td>{{$index+1}}</td>
+            <td>
+              <a uib-popover-template="'workflowStepTemplate.html'" ng-style="workflow.step?{color:'black'}:{}" popover-title="就检步骤" popover-trigger="outsideClick" ng-bind="workflow.step || '点击设置'" ng-click="step_click(workflow)"></a>
+            </td>
+            <td>
+              <a uib-popover-template="'workflowStepDescriptionTemplate.html'" ng-style="workflow.step_description?{color:'black'}:{}" popover-title="步骤说明" popover-trigger="outsideClick" ng-bind="workflow.step_description || '点击设置'" ng-click="step_description_click(workflow)"></a>
+            </td>
+            <td>
+              <a class="btn btn-danger btn-xs color_box" ng-click="delete_row($index)">移除</a>
+            </td>
+          </tr>
+        </table>
+      <div>
+    </div>
+    <button style="margin-top: 10px;" class="btn btn-primary" type="button" ng-click="save()">保存</button>
+    <button style="margin-top: 10px;" class="btn btn-warning" type="button" ng-click="cancel()">取消</button>
+    <button style="margin-top: 10px;" class="btn btn-success" type="button" ng-click="add_workflow_row()">新增就诊流程</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="workflowStepTemplate.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="workflow.step"/>
+        <button class="form-control btn-primary" ng-click="input_ok_click()">OK</button>
+    </div>
+  </form>
+</script>
+
+<script type="text/ng-template" id="workflowStepDescriptionTemplate.html">
+  <form class="form-inline">
+    <div class="form-group">
+        <input class="form-control" ng-model="workflow.step_description"/>
+        <button class="form-control btn-primary" ng-click="input_ok_click()">OK</button>
+    </div>
+  </form>
+</script>
+
+<!-- 新建合作医院 -->
+<script type="text/ng-template" id="new_hospital.html">
+  <div class="modal-header">
+			<button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+      <h4 class="modal-title">新增合作医院</h4>
+  </div>
+  <div class="modal-body" ng-click="hide_search()">
+    <div class="row">
+      <div class="col-lg-12">
+        <label class="radio-inline">
+          <input type="radio" name="inlineRadioOptions" id="inlineRadio1" checked="checked"> 全部
+        </label>
+        <label class="radio-inline" ng-repeat="city in cities">
+          <input type="radio" name="inlineRadioOptions" id="inlineRadio{{$index+2}}" value={{city.id}} ng-model="$parent.city_id"> {{city.name}}
+        </label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-8" style="margin: 10px 0px 10px 0px;">
+        <div class="input-group">
+          <input type="text" ng-change="input_change(hospital.name)" ng-model="hospital.name" class="form-control" id="hos_name" placeholder="医院名称" ng-click="show_search()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" ng-click="input_ok_click(hospital.name)">搜索</button>
+          </span>
+        </div>
+        <div id='search_panel' class="panel panel-default" style="z-index:55;position:absolute;left:15px;top:37px;width:79%" ng-show="searching_hospitals && searching_hospitals.length!=0 && hospital.name != ''">
+          <div class="panel-body" style="padding:1%;">
+            <span  ng-repeat="sh in searching_hospitals">
+              <a ng-click="rm_to_table(sh)" style="display:inline-block;color:black;margin-top:10px;height:26px;width:500">{{sh.name}}</a>
+              <span style="color:grey">&nbsp;&nbsp;{{sh.city_name}}&nbsp;&nbsp;{{province_name}}</span>
+              <hr style="margin-bottom:1px;margin-top:1px;"/>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <table class="table table-bordered table-hover">
+          	<tr style="background-color:#f6f6f6;">
+              <th>#</th>
+              <th>医院名称</th>
+              <th>城市</th>
+              <th>城市等级</th>
+              <th>医院性质</th>
+              <th>选定</th>
+            </tr>
+            <tr ng-repeat="h in searched_hospitals">
+              <td>{{h.id}}</td>
+              <td>{{h.name}}</td>
+              <td>{{h.city_name}}</td>
+              <td>{{h.level_name}}</td>
+              <td>{{h.nature_name}}</td>
+              <td>
+                <input type="radio" name="select_radio" ng-model="h.isSelected" value='{{h.id}}'/>
+              </td>
+            </tr>
+        </table>
+      </div>
+    </div>
+    <button style="margin-top: 10px;" class="btn btn-sm btn-primary" type="button" ng-click="save()">添加选定医院</button>
+    <button style="margin-top: 10px;" class="btn btn-sm btn-warning" type="button" ng-click="cancel()">取消</button>
+  </div>
+</script>
