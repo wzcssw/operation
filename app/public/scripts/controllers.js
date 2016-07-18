@@ -2,7 +2,7 @@ var controllers = angular.module('controllers', ['services', 'directives']);
 controllers.controller('loginController', ['$scope', 'userHttp', '$state', function($scope, userHttp, $state) {
   $scope.self = $scope;
   if (userHttp.isLogin()) {
-    $state.go('dic_hospitals');
+    $state.go('main');
     return;
   }
 
@@ -51,49 +51,57 @@ controllers.controller('updatePasswordController', ['$scope','userHttp', '$uibMo
   }
 }]);
 
+controllers.controller('mainController', ['$scope',function($scope) {
+
+}]);
 
 
-controllers.controller('addProjectToHospitalController', ['$scope', 'projectHttp', 'hospitalHttp', '$state', '$uibModalInstance', 'items', function($scope, projectHttp, hospitalHttp, $state, $uibModalInstance, items) {
-  $scope.items = items;
-  hospitalHttp.getHospitalProjects({
-    hospital_id: items.hospital_id
-  }, function(data) {
-    var project_name_arr = [];
-    for (var i = 0; i < data.projects.length; i++) {
-      project_name_arr.push(data.projects[i].project);
-    }
-    $scope.items.project_name_arr = project_name_arr;
+
+controllers.controller('visitRecordsController', ['$scope', 'visitRecordsHttp','citiesHttp', function($scope, visitRecordsHttp,citiesHttp) {
+  visitRecordsHttp.getVisitRecords({},function (data) {
+    $scope.visit_records = data.result.visit_records;
+    $scope.current_page = data.result.current_page;
+    $scope.total_count = data.result.total_count;
   });
-  projectHttp.getProjects({
-    category_id: items.category_id
-  }, function(data) {
-    $scope.projects = data.result.projects;
+  citiesHttp.getOpenedCities({},function(data) {
+    $scope.opened_cities = data.cities;
   });
-  $scope.contains = function(arr, obj, _this) {
-    var i = arr.length;
-    while (i--) {
-      if (arr[i] === obj) {
-        return true;
-      }
-    }
-    return false;
-  }
-  $scope.cancel = function() {
-    $uibModalInstance.dismiss('cancel');
-  };
-  $scope.save = function() {
-    project_ids = [];
-    angular.forEach($scope.projects, function(object, index) {
-      if (object.isChecked) {
-        project_ids.push(object.id)
-      }
-    });
-    hospitalHttp.addHospitalProjects({
-      hospital_id: items.hospital_id,
-      project_ids: project_ids
+  $scope.search = function() {
+    visitRecordsHttp.getVisitRecords({
+      city_id: $scope.city_id,
+      agent_name: $scope.agent_name,
+      doctor_name: $scope.doctor_name
     }, function(data) {
-      $uibModalInstance.close();
-      $state.reload();
+      $scope.current_page = data.result.current_page;
+      $scope.total_count = data.result.total_count;
+      $scope.visit_records = data.result.visit_records;
     });
   };
+  $scope.pageChanged = function() {
+     visitRecordsHttp.getVisitRecords({
+       page: $scope.current_page
+     }, function(data) {
+       $scope.current_page = data.result.current_page;
+       $scope.total_count = data.result.total_count;
+       $scope.visit_records = data.result.visit_records;
+     });
+   };
+   $scope.setPage = function() {
+     $scope.current_page = $('#go_page').val();
+     $scope.pageChanged();
+     $('#go_page').val("");
+   };
+   $scope.refresh = function () {
+      $scope.agent_name = "";
+      $scope.doctor_name = "";
+      $scope.city_id = "";
+      visitRecordsHttp.getVisitRecords({},function (data) {
+        $scope.visit_records = data.result.visit_records;
+        $scope.current_page = data.result.current_page;
+        $scope.total_count = data.result.total_count;
+      });
+      citiesHttp.getOpenedCities({},function(data) {
+        $scope.opened_cities = data.cities;
+      });
+   }
 }]);

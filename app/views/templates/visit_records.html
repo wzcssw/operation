@@ -1,0 +1,52 @@
+<div class="table-operation" style="margin-left:-25px;">
+	<h3 style="margin-left:13px;">销售拜访记录</h3>
+	<div>
+		<div class="navbar-form ng-pristine ng-valid" role="search">
+		<div class="form-group">
+			<select ng-change="search()" ng-model="city_id" class="form-control">
+	      <option value="">所在城市</option>
+	      <option ng-repeat="city in opened_cities" value={{city.id}}>{{city.name}}</option>
+	    </select>
+			<input type="text" ng-model="agent_name" class="form-control datetimepicker_full" placeholder="销售姓名">
+			<input type="text" ng-model="doctor_name" class="form-control datetimepicker_full" placeholder="医生姓名">
+		</div>
+		<button type="submit" class="btn btn-defualt" ng-click="search()">搜索</button>
+  		<a class="btn btn-default" ng-click="refresh()">清空</a>
+		<a class="btn btn-default">导出</a>
+		</div>
+	</div>
+</div>
+
+<table class="table table-bordered table-hover">
+  	<tr style="background-color:#f6f6f6;">
+			<td>记录时间</td>
+			<td>拜访销售</td>
+  	  <td>拜访医生</td>
+  	  <td>所在城市</td>
+  	  <td>所属销售组</td>
+  	  <td>拜访类型</td>
+  	  <td>拜访方式</td>
+  	  <td>拜访记录</td>
+  	</tr>
+  	<tr ng-repeat="vr in visit_records">
+			<td>{{vr.created_at | date:'yyyy-MM-dd'}}</td>
+  		<td>{{vr.agent_name}}</td>
+  		<td>{{vr.doctor_name}}</td>
+  		<td>{{vr.city_name}}</td>
+  		<td>{{vr.agent_group}}</td>
+  		<td>{{vr.visit_type_zh}}</td>
+  		<td>{{vr.visit_means_zh}}</td>
+  		<td>{{vr.visit_content}}</td>
+  	</tr>
+		<tr ng-show="visit_records.length==0">
+			<td colspan=8>(暂无相关数据)</td>
+  	</tr>
+  </tbody>
+</table>
+<div class='pagination'>
+  <uib-pagination style="margin-left: 10px;margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="pageChanged()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+  <div style="float: right;position: relative;top: -20px;">
+    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+    <button type="button" class="btn btn-sm btn-default" ng-click="setPage()">确定</button>
+  </div>
+</div>
