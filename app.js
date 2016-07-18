@@ -19,6 +19,7 @@ app.on('error', function(err) {
 app.use(staticServe('./app/public'));
 app.use(staticServe('./bower_components'));
 app.use(staticServe('./app/views'));
+
 // 处理post参数到app(this.request.body)中
 app.use(bodyParser());
 render(app, {
@@ -33,13 +34,13 @@ render(app, {
  * logger
  */
 app.use(mdKoa.Logger());
-
 /**
  * error
  */
 app.on('error', function(err,ctx){
     ctx.logger.error(err)
 });
+
 
 /**
  * session
@@ -55,6 +56,7 @@ app.use(mdKoa.NotFound());
  * response
  */
 require('./app/routes')(app);
+
 require('./app/api')(app);
 
 module.exports = app;

@@ -12,6 +12,10 @@ routes.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, 
         url:'/visit_records',
         templateUrl:'templates/visit_records.html',
         controller:'visitRecordsController'
+    }).state('feedbacks', {
+        url:'/feedbacks',
+        templateUrl:'templates/feedbacks.html',
+        controller:'feedbacksController'
     });
     $urlRouterProvider.otherwise('/login');
 }]);

@@ -55,8 +55,6 @@ controllers.controller('mainController', ['$scope',function($scope) {
 
 }]);
 
-
-
 controllers.controller('visitRecordsController', ['$scope', 'visitRecordsHttp','citiesHttp', function($scope, visitRecordsHttp,citiesHttp) {
   visitRecordsHttp.getVisitRecords({},function (data) {
     $scope.visit_records = data.result.visit_records;
@@ -66,6 +64,7 @@ controllers.controller('visitRecordsController', ['$scope', 'visitRecordsHttp','
   citiesHttp.getOpenedCities({},function(data) {
     $scope.opened_cities = data.cities;
   });
+  $scope.maxSize = 5;
   $scope.search = function() {
     visitRecordsHttp.getVisitRecords({
       city_id: $scope.city_id,
@@ -104,4 +103,30 @@ controllers.controller('visitRecordsController', ['$scope', 'visitRecordsHttp','
         $scope.opened_cities = data.cities;
       });
    }
+}]);
+
+controllers.controller('feedbacksController', ['$scope', 'feedbacksHttp', function($scope, feedbacksHttp) {
+  $scope.self = $scope;
+  $scope.current_page = 1;
+  $scope.maxSize = 5;
+  feedbacksHttp.getClassify({},function(data){
+    $scope.classifies = data.classifies;
+  });
+  $scope.getFeedback = function(){
+    feedbacksHttp.getFeedbacks({
+      q: $scope.q,
+      classify: $scope.classify,
+      page: $scope.current_page
+    },function(data){
+      $scope.feedbacks = data.feedbacks;
+      $scope.current_page = data.current_page;
+      $scope.total_count = data.total_count;
+    });
+  };
+  $scope.getFeedback();
+  $scope.setPage = function() {
+    $scope.current_page = $('#go_page').val();
+    $scope.getFeedback();
+    $('#go_page').val("");
+  }
 }]);

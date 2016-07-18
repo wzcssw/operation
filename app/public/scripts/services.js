@@ -129,6 +129,30 @@ services.factory('visitRecordsHttp', ['httpBase', function(httpBase){
     }
 }]);
 
+
+services.factory('feedbacksHttp', ['httpBase', function(httpBase){
+    return {
+        getFeedbacks: function(params, successDo, errorDo, alwaysDo){
+            httpBase.get({
+                url: '/api/feedbacks/get_feedbacks',
+                params: params,
+                successDo: successDo,
+                errorDo: errorDo,
+                alwaysDo: alwaysDo
+            });
+        },
+        getClassify: function(params, successDo, errorDo, alwaysDo){
+            httpBase.get({
+                url: '/api/feedbacks/get_classify',
+                params: params,
+                successDo: successDo,
+                errorDo: errorDo,
+                alwaysDo: alwaysDo
+            });
+        }
+    }
+}]);
+
 services.factory('citiesHttp', ['httpBase', function(httpBase){
     return{
         getOpenedCities: function(params, successDo, errorDo, alwaysDo){
