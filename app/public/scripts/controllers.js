@@ -97,3 +97,30 @@ controllers.controller('addProjectToHospitalController', ['$scope', 'projectHttp
     });
   };
 }]);
+
+
+controllers.controller('feedbacksController', ['$scope', 'feedbacksHttp', function($scope, feedbacksHttp) {
+  $scope.self = $scope;
+  $scope.current_page = 1;
+  $scope.maxSize = 5;
+  feedbacksHttp.getClassify({},function(data){
+    $scope.classifies = data.classifies;
+  });
+  $scope.getFeedback = function(){
+    feedbacksHttp.getFeedbacks({
+      q: $scope.q,
+      classify: $scope.classify,
+      page: $scope.current_page
+    },function(data){
+      $scope.feedbacks = data.feedbacks;
+      $scope.current_page = data.current_page;
+      $scope.total_count = data.total_count;
+    });
+  };
+  $scope.getFeedback();
+  $scope.setPage = function() {
+    $scope.current_page = $('#go_page').val();
+    $scope.getFeedback();
+    $('#go_page').val("");
+  }
+}]);

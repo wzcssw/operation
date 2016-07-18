@@ -1,0 +1,37 @@
+<div class="table-operation">
+    <h3>意见反馈</h3>
+    <div style="height:30px;"> 
+    <input style="width: 13%;float: left;margin-right: 5px;" type="text" ng-model="q" class="form-control" placeholder="提交人">
+    <select style="width: 7%;float: left;margin-right: 5px;" ng-change="getFeedback()" ng-model="classify" class="form-control">
+      <option value="">全部意见</option>
+      <option ng-repeat="classify in classifies track by $index" value={{$index}}>{{classify}}</option>
+    </select>
+    <button style="float: left;width: 5%;" ng-click="getFeedback()" class="btn btn-default">搜索</button>
+    </div>
+
+</div>
+<table class="table table-hover table-bordered table_sense" style="margin-top: 20px;">
+    <tr style="text-align: center">
+        <td>#</td>
+        <td>分类</td>
+        <td>意见内容</td>
+        <td>提交时间</td>
+        <td>提交人</td>
+        <td>电话</td>
+    </tr>
+    <tr ng-repeat="f in feedbacks" style="text-align: center;">
+        <td>{{f.id}}</td>
+        <td>{{f.classify_zh}}</td>
+        <td style="width:60%;text-align:left;">{{f.content}}</td>
+        <td>{{f.created_at | date:'yyyy-MM-dd HH:mm'}}</td>
+        <td>{{f.feedbackcreator}}</td>
+        <td>{{f.phone}}</td>
+    </tr>
+</table>
+<div class='pagination'>
+    <uib-pagination style="margin-left: 10px;margin-top: -20px;" first-text="首页" last-text="尾页" previous-text="上一页" next-text="下一页" ng-change="getFeedback()" items-per-page=20 total-items="total_count" ng-model="current_page" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="false"></uib-pagination>
+    <div style="float: right;position: relative;top: -20px;">
+    跳转到第<input style="width: 40px;" id="go_page" type="text"></input>页
+    <button type="button" class="btn btn-default" ng-click="setPage()">确定</button>
+  </div>
+</div>

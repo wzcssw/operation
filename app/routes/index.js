@@ -6,4 +6,6 @@ function joinedRoute(app){
     app.use(controllers.rootRoutes);
     app.use(controllers.userRoutes);
 }
+
+
 module.exports = joinedRoute;
